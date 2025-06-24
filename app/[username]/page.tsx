@@ -26,6 +26,7 @@ export default async function UserPage({ params }: { params: Promise<{ username:
             latestGuessResolved={latestGuess?.resolvedAt !== null}
             latestGuessRecordedBtcValue={latestGuess?.recordedBTCValue ?? null}
             latestGuessPrediction={latestGuess?.prediction ?? null}
+            lastGuessCreatedAt={latestGuess?.createdAt ?? null}
         />
     );
 }

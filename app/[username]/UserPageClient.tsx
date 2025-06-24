@@ -10,18 +10,93 @@ interface UserPageClientProps {
     latestGuessResolved: boolean;
     latestGuessRecordedBtcValue: number | null;
     latestGuessPrediction: 'UP' | 'DOWN' | null;
+    lastGuessCreatedAt: Date | null;
 }
 
 export default function UserPageClient({ userId, initialScore, initialBtcPrice, latestGuessResolved: _latestGuessResolved,
-    latestGuessRecordedBtcValue: _latestGuessRecordedBtcValue, latestGuessPrediction: _latestGuessPrediction
+    latestGuessRecordedBtcValue: _latestGuessRecordedBtcValue, latestGuessPrediction: _latestGuessPrediction,
+    lastGuessCreatedAt: _lastGuessCreatedAt
 }: UserPageClientProps) {
     const [score, setScore] = useState(initialScore);
     const [btcPrice, setBtcPrice] = useState<number>(initialBtcPrice);
     const [latestGuessResolved, setLatestGuessResolved] = useState(_latestGuessResolved);
     const [latestGuessRecordedBtcValue, setLatestGuessRecordedBtcValue] = useState<number | null>(_latestGuessRecordedBtcValue);
     const [latestGuessPrediction, setLatestGuessPrediction] = useState<string | null>(_latestGuessPrediction);
-    const GUESS_RESOLUTION_INTERVAL_MS = 60000;
+    const [lastGuessCreatedAt, setLastGuessCreatedAt] = useState<Date | null>(_lastGuessCreatedAt);
+    const [timeElapsed, setTimeElapsed] = useState<number>(0);
+    const [isCheckingGuessResult, setIsCheckingGuessResult] = useState(false);
+    const GUESS_RESOLUTION_TIME_MS = 60000;
     const BTC_PRICE_REFRESH_INTERVAL_MS = 5000;
+
+    const formatTimeElapsed = (ms: number): string => {
+        const seconds = Math.floor(ms / 1000);
+        return `${seconds}s`;
+    };
+
+    const checkGuessResult = async () => {
+        if (isCheckingGuessResult) {
+            return;
+        }
+        setIsCheckingGuessResult(true);
+        try {
+            const res = await fetch(`/api/check-guess-result?userId=${userId}`);
+            const data = await res.json();
+
+            setIsCheckingGuessResult(false);
+
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            if (data.resolved) {
+                if (data.isCorrect !== undefined) {
+                    const message = data.isCorrect ? 'You were right!' : 'You were wrong!';
+                    if (data.isCorrect) {
+                        toast.success(message);
+                    } else {
+                        toast.error(message);
+                    }
+                }
+                if (data.updatedScore !== undefined) {
+                    setScore(data.updatedScore);
+                }
+                setLatestGuessResolved(true);
+            }
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                toast.error(err.message);
+            } else {
+                toast.error('An unknown error occurred while checking resolution.');
+            }
+            setLatestGuessResolved(true);
+        }
+    };
+
+    useEffect(() => {
+        if (latestGuessResolved) {
+            setTimeElapsed(0);
+            return;
+        }
+
+        const updateElapsedTime = () => {
+            if (!lastGuessCreatedAt) {
+                return;
+            }
+            const currentTime = Date.now();
+            const elapsed = currentTime - lastGuessCreatedAt.getTime();
+            setTimeElapsed(elapsed);
+            if (elapsed >= GUESS_RESOLUTION_TIME_MS) {
+                checkGuessResult();
+            }
+        };
+
+        // Update immediately
+        updateElapsedTime();
+
+        // Then update every second
+        const interval = setInterval(updateElapsedTime, 1000);
+        return () => clearInterval(interval);
+    }, [lastGuessCreatedAt, latestGuessResolved]);
 
     useEffect(() => {
         const fetchBtcPrice = async () => {
@@ -33,48 +108,13 @@ export default function UserPageClient({ userId, initialScore, initialBtcPrice, 
         return () => clearInterval(interval);
     }, []);
 
-    useEffect(() => {
-        if (latestGuessResolved) {
-            return;
-        }
 
-        const checkGuessResult = async () => {
-            try {
-                const res = await fetch(`/api/check-guess-result?userId=${userId}`);
-                const data = await res.json();
-
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-
-                if (data.resolved) {
-                    const message = data.isCorrect ? 'You were right!' : 'You were wrong!';
-                    if (data.isCorrect) {
-                        toast.success(message);
-                    } else {
-                        toast.error(message);
-                    }
-                    if (data.updatedScore !== undefined) {
-                        setScore(data.updatedScore);
-                    }
-                    setLatestGuessResolved(true);
-                }
-            } catch (err: unknown) {
-                if (err instanceof Error) {
-                    toast.error(err.message);
-                } else {
-                    toast.error('An unknown error occurred while checking resolution.');
-                }
-                setLatestGuessResolved(true);
-            }
-        };
-
-        const interval = setInterval(checkGuessResult, GUESS_RESOLUTION_INTERVAL_MS);
-        return () => clearInterval(interval);
-
-    }, [latestGuessResolved, userId]);
 
     const handleGuess = async (prediction: 'UP' | 'DOWN') => {
+        setLatestGuessResolved(false);
+        setLatestGuessRecordedBtcValue(btcPrice);
+        setLatestGuessPrediction(prediction);
+        setLastGuessCreatedAt(new Date());
         try {
             const res = await fetch('/api/make-guess', {
                 method: 'POST',
@@ -93,17 +133,13 @@ export default function UserPageClient({ userId, initialScore, initialBtcPrice, 
             if (!res.ok) {
                 throw new Error(data.error || 'Failed to make a guess.');
             }
-
-            setLatestGuessResolved(false);
-            setLatestGuessRecordedBtcValue(btcPrice);
-            setLatestGuessPrediction(prediction);
         } catch (err: unknown) {
             if (err instanceof Error) {
                 toast.error(err.message);
             } else {
                 toast.error('An unknown error occurred while making the guess.');
             }
-            setLatestGuessResolved(true); // Re-enable buttons on error
+            setLatestGuessResolved(true);
         }
     };
 
@@ -137,10 +173,18 @@ export default function UserPageClient({ userId, initialScore, initialBtcPrice, 
                         </button>
                     </div>
                     {latestGuessRecordedBtcValue && latestGuessPrediction && (
-                        <p className="text-lg mt-4 text-blue-400">
-                            Latest Prediction made against: ${latestGuessRecordedBtcValue.toLocaleString()} ({latestGuessPrediction})
-                        </p>
+                        <div className="mt-4">
+                            <p className="text-lg text-blue-400">
+                                Latest Prediction made against: ${latestGuessRecordedBtcValue.toLocaleString()} ({latestGuessPrediction})
+                            </p>
+                            {!latestGuessResolved && timeElapsed > 0 && (
+                                <p className="text-md text-yellow-400 mt-2">
+                                    Time elapsed: {formatTimeElapsed(timeElapsed)}
+                                </p>
+                            )}
+                        </div>
                     )}
+
                 </div>
             </main>
         </div>
