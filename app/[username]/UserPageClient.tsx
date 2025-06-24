@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 interface UserPageClientProps {
@@ -24,7 +24,7 @@ export default function UserPageClient({ userId, initialScore, initialBtcPrice, 
     const [latestGuessPrediction, setLatestGuessPrediction] = useState<string | null>(_latestGuessPrediction);
     const [lastGuessCreatedAt, setLastGuessCreatedAt] = useState<Date | null>(_lastGuessCreatedAt);
     const [timeElapsed, setTimeElapsed] = useState<number>(0);
-    const [isCheckingGuessResult, setIsCheckingGuessResult] = useState(false);
+    const isCheckingGuessResult = useRef(false);
     const GUESS_RESOLUTION_TIME_MS = 60000;
     const BTC_PRICE_REFRESH_INTERVAL_MS = 5000;
 
@@ -34,15 +34,15 @@ export default function UserPageClient({ userId, initialScore, initialBtcPrice, 
     };
 
     const checkGuessResult = async () => {
-        if (isCheckingGuessResult) {
+        if (isCheckingGuessResult.current) {
             return;
         }
-        setIsCheckingGuessResult(true);
+        isCheckingGuessResult.current = true;
         try {
             const res = await fetch(`/api/check-guess-result?userId=${userId}`);
             const data = await res.json();
 
-            setIsCheckingGuessResult(false);
+            isCheckingGuessResult.current = false;
 
             if (data.error) {
                 throw new Error(data.error);
@@ -69,7 +69,7 @@ export default function UserPageClient({ userId, initialScore, initialBtcPrice, 
                 toast.error('An unknown error occurred while checking resolution.');
             }
             setLatestGuessResolved(true);
-            setIsCheckingGuessResult(false);
+            isCheckingGuessResult.current = false;
         }
     };
 
