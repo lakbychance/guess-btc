@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import * as dotenv from 'dotenv';
 
-dotenv.config({ path: '.env.test' });
+dotenv.config({ path: '.env.test', override: true });
 
 export const testDb = new PrismaClient({
     datasources: {
