@@ -20,7 +20,7 @@ export default function UserPageClient({ userId, initialScore, initialBtcPrice, 
     const [latestGuessResolved, setLatestGuessResolved] = useState(_latestGuessResolved);
     const [latestGuessRecordedBtcValue, setLatestGuessRecordedBtcValue] = useState<number | null>(_latestGuessRecordedBtcValue);
     const [latestGuessPrediction, setLatestGuessPrediction] = useState<string | null>(_latestGuessPrediction);
-    const GUESS_RESOLUTION_INTERVAL_MS = 30000;
+    const GUESS_RESOLUTION_INTERVAL_MS = 60000;
     const BTC_PRICE_REFRESH_INTERVAL_MS = 5000;
 
     useEffect(() => {
@@ -75,9 +75,6 @@ export default function UserPageClient({ userId, initialScore, initialBtcPrice, 
     }, [latestGuessResolved, userId]);
 
     const handleGuess = async (prediction: 'UP' | 'DOWN') => {
-        setLatestGuessResolved(false);
-        setLatestGuessRecordedBtcValue(btcPrice);
-        setLatestGuessPrediction(prediction);
         try {
             const res = await fetch('/api/make-guess', {
                 method: 'POST',
@@ -97,8 +94,9 @@ export default function UserPageClient({ userId, initialScore, initialBtcPrice, 
                 throw new Error(data.error || 'Failed to make a guess.');
             }
 
-            // Buttons will remain disabled until the guess is resolved.
-            // Polling for resolution will be handled in another effect.
+            setLatestGuessResolved(false);
+            setLatestGuessRecordedBtcValue(btcPrice);
+            setLatestGuessPrediction(prediction);
         } catch (err: unknown) {
             if (err instanceof Error) {
                 toast.error(err.message);
