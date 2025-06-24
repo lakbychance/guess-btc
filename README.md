@@ -12,6 +12,8 @@ A POC of Bitcoin price prediction game. Players guess whether Bitcoin’s price 
 
 ## Running the App
 
+Install the dependencies
+
 ```bash
 npm install
 ```
@@ -29,7 +31,7 @@ npm run dev
 ```
 
 ## Testing the App
-Currently has tests written for the `userService` and `guessService` which handles the business logic for the app
+Currently this app has tests written for the `userService` and `guessService` which handles the core business logic.
 
 Create a .env.test file with:
 ```env
@@ -42,5 +44,6 @@ npm test
 ```
 
 ## Deploying the App
-- A nextjs app can be deployed on multiple platforms. We just need to ensure setting up the env variables before hand in respective dashboard. 
-- The commands `npm build` followed by `npm start` will start the project there. 
+- A nextjs app can be deployed on multiple platforms. We just need to ensure setting up the env variables before hand in respective dashboard of the platform. 
+- Build command will be `npm build` and project running command will be `npm start`
+- This app is deployed on Vercel.
