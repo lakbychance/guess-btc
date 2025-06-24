@@ -4,8 +4,8 @@ import { notFound } from 'next/navigation';
 
 
 
-export default async function UserPage({ params }: { params: { username: string } }) {
-    const { username } = params;
+export default async function UserPage({ params }: { params: Promise<{ username: string }> }) {
+    const { username } = await params;
 
     const [userData, btcPrice] = await Promise.all([
         UserService.findUserByUsername(username),

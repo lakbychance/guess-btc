@@ -1,7 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import * as dotenv from 'dotenv';
 
-// Load test environment variables
 dotenv.config({ path: '.env.test' });
 
 export const testDb = new PrismaClient({

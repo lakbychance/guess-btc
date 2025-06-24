@@ -15,14 +15,12 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Invalid prediction value' }, { status: 400 });
         }
 
-        // Check for an existing unresolved guess
         const hasUnresolvedGuess = await GuessService.hasUnresolvedGuess(userId);
 
         if (hasUnresolvedGuess) {
             return NextResponse.json({ error: 'An unresolved guess already exists for this user' }, { status: 403 });
         }
 
-        // Create a new guess
         const newGuess = await GuessService.createGuess({
             userId,
             prediction: prediction as PredictionType,
