@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Guess BTC – Bitcoin Price Prediction Game
 
-## Getting Started
+A POC of Bitcoin price prediction game. Players guess whether Bitcoin’s price will rise or fall within a 1-minute window.
 
-First, run the development server:
+## Features
+
+1. Users start by creating a player profile on the landing page, which redirects them to the `/username` route.
+2. On the `/username` page, the user's score appears in the top-left corner (starting at 0 for new players), along with the current BTC price in USD, which updates at regular intervals using the Coinbase API.
+3. Players predict whether the price will go up or down in the next minute. After submitting a guess, the buttons are temporarily disabled.
+4. Once atleast a minute has passed since the last guess, the app displays a toast message indicating whether the prediction was correct.
+5. A correct guess increases the player’s score by 1. An incorrect guess decreases it by 1, but the score never drops below 0.
+
+## Running the App
+
+```bash
+npm install
+```
+
+Create a .env file with the following:
+
+```env
+DATABASE_URL=your_mongodb_connection_string
+```
+
+Then run the app:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Testing the App
+Currently has tests written for the `userService` and `guessService` which handles the business logic for the app
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create a .env.test file with:
+```env
+DATABASE_URL=your_mongodb_connection_string_for_tests
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Run the tests:
+```bash
+npm test
+```
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deploying the App
+- A nextjs app can be deployed on multiple platforms. We just need to ensure setting up the env variables before hand in respective dashboard. 
+- The commands `npm build` followed by `npm start` will start the project there. 

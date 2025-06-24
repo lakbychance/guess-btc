@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// Define an enum for the prediction type
+enum PredictionType {
+  UP
+  DOWN
+}
+
+model User {
+  id       String  @id @default(auto()) @map("_id") @db.ObjectId
+  username String  @unique
+  score    Int     @default(0)
+}
+
+model Guess {
+  id               String          @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt        DateTime        @default(now())
+  prediction       PredictionType
+  resolvedAt       DateTime?
+  recordedBTCValue Float
+  isCorrect        Boolean?
+  userId String @db.ObjectId
+}
