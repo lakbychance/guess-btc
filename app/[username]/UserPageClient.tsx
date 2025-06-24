@@ -69,6 +69,7 @@ export default function UserPageClient({ userId, initialScore, initialBtcPrice, 
                 toast.error('An unknown error occurred while checking resolution.');
             }
             setLatestGuessResolved(true);
+            setIsCheckingGuessResult(false);
         }
     };
 
